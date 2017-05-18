@@ -1,5 +1,5 @@
 -- |
--- Module      :  Text.Mustache.Render
+-- Module      :  Text.Microstache.Render
 -- Copyright   :  © 2016–2017 Stack Builders
 -- License     :  BSD 3 clause
 --
@@ -8,26 +8,30 @@
 -- Portability :  portable
 --
 -- Functions for rendering Mustache templates. You don't usually need to
--- import the module, because "Text.Mustache" re-exports everything you may
+-- import the module, because "Text.Microstache" re-exports everything you may
 -- need, import that module instead.
 
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Text.Mustache.Render
+module Text.Microstache.Render
   ( renderMustache )
 where
 
 import Control.Exception (throw)
-import Control.Monad.Reader
-import Control.Monad.Writer.Lazy
+import Control.Monad (when, forM_, unless)
+import Control.Monad.Trans.Reader
+import Control.Monad.Trans.Writer.Lazy
+import Control.Monad.Trans.Class (lift)
 import Data.Aeson
+import Data.Monoid (mempty)
+import Data.Semigroup ((<>))
 import Data.Foldable (asum)
 import Data.List (tails)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Text (Text)
-import Text.Megaparsec.Pos (Pos, unPos)
-import Text.Mustache.Type
+import Data.Word (Word)
+import Text.Microstache.Type
 import qualified Data.ByteString.Lazy   as B
 import qualified Data.HashMap.Strict    as H
 import qualified Data.List.NonEmpty     as NE
@@ -36,6 +40,7 @@ import qualified Data.Semigroup         as S
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as T
 import qualified Data.Text.Lazy         as TL
+import qualified Data.Text.Lazy.Encoding     as TL
 import qualified Data.Text.Lazy.Builder as B
 import qualified Data.Vector            as V
 
@@ -55,7 +60,7 @@ type Render a = ReaderT RenderContext (Writer B.Builder) a
 -- | The render monad context.
 
 data RenderContext = RenderContext
-  { rcIndent   :: Maybe Pos      -- ^ Actual indentation level
+  { rcIndent   :: Maybe Word      -- ^ Actual indentation level
   , rcContext  :: NonEmpty Value -- ^ The context stack
   , rcPrefix   :: Key            -- ^ Prefix accumulated by entering sections
   , rcTemplate :: Template       -- ^ The template to render
@@ -122,7 +127,7 @@ runRender m t v = (B.toLazyText . execWriter) (runReaderT m rc)
 -- | Output a piece of strict 'Text'.
 
 outputRaw :: Text -> Render ()
-outputRaw = tell . B.fromText
+outputRaw = lift . tell . B.fromText
 {-# INLINE outputRaw #-}
 
 -- | Output indentation consisting of appropriate number of spaces.
@@ -147,7 +152,7 @@ outputIndented txt = do
 
 renderPartial
   :: PName             -- ^ Name of partial to render
-  -> Maybe Pos         -- ^ Indentation level to use
+  -> Maybe Word         -- ^ Indentation level to use
   -> (Node -> Render ()) -- ^ How to render nodes in that partial
   -> Render ()
 renderPartial pname i f =
@@ -192,7 +197,9 @@ lookupKey k = do
   pname <- asks (templateActual . rcTemplate)
   let f x = asum (simpleLookup False (x <> k) <$> v)
   case asum (fmap (f . Key) . reverse . tails $ unKey p) of
-    Nothing -> throw (MustacheRenderException pname (p <> k))
+    -- Context Misses: Failed context lookups should be considered falsey.
+    -- throw (MustacheRenderException pname (p <> k))
+    Nothing -> return (String "")
     Just  r -> return r
 
 -- | Lookup a 'Value' by traversing another 'Value' using given 'Key' as
@@ -233,20 +240,20 @@ addToLocalContext v =
 ----------------------------------------------------------------------------
 -- Helpers
 
--- | Add two 'Maybe' 'Pos' values together.
+-- | Add two 'Maybe' 'Word' values together.
 
-addIndents :: Maybe Pos -> Maybe Pos -> Maybe Pos
+addIndents :: Maybe Word -> Maybe Word -> Maybe Word
 addIndents Nothing  Nothing  = Nothing
 addIndents Nothing  (Just x) = Just x
 addIndents (Just x) Nothing  = Just x
-addIndents (Just x) (Just y) = Just (x S.<> y)
+addIndents (Just x) (Just y) = Just (x + y)
 {-# INLINE addIndents #-}
 
 -- | Build intentation of specified length by repeating the space character.
 
-buildIndent :: Maybe Pos -> Text
+buildIndent :: Maybe Word -> Text
 buildIndent Nothing = ""
-buildIndent (Just p) = let n = fromIntegral (unPos p) - 1 in T.replicate n " "
+buildIndent (Just p) = let n = fromIntegral p - 1 in T.replicate n " "
 {-# INLINE buildIndent #-}
 
 -- | Select invisible values.
@@ -265,7 +272,7 @@ isBlank _            = False
 renderValue :: Value -> Text
 renderValue Null         = ""
 renderValue (String str) = str
-renderValue value        = (T.decodeUtf8 . B.toStrict . encode) value
+renderValue value        = (TL.toStrict . TL.decodeUtf8 . encode) value
 {-# INLINE renderValue #-}
 
 -- | Escape HTML represented as strict 'Text'.

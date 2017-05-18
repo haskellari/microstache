@@ -1,11 +1,7 @@
-# Stache
+# microstache
 
-[![License BSD3](https://img.shields.io/badge/license-BSD3-brightgreen.svg)](http://opensource.org/licenses/BSD-3-Clause)
-[![Hackage](https://img.shields.io/hackage/v/stache.svg?style=flat)](https://hackage.haskell.org/package/stache)
-[![Stackage Nightly](http://stackage.org/package/stache/badge/nightly)](http://stackage.org/nightly/package/stache)
-[![Stackage LTS](http://stackage.org/package/stache/badge/lts)](http://stackage.org/lts/package/stache)
-[![Build Status](https://travis-ci.org/stackbuilders/stache.svg?branch=master)](https://travis-ci.org/stackbuilders/stache)
-[![Coverage Status](https://coveralls.io/repos/github/stackbuilders/stache/badge.svg?branch=master)](https://coveralls.io/github/stackbuilders/stache?branch=master)
+Based on [`stache`](http://hackage.haskell.org/package/stache) library, which uses `megaparsec`.
+This library uses `parsec`, thus the name: `microstache`.
 
 This is a Haskell implementation of Mustache templates. The implementation
 conforms to the version 1.1.3 of official [Mustache specification]
@@ -14,22 +10,21 @@ straightforward to use with minimal but complete API — three functions to
 compile templates (from directory, from file, and from lazy text) and one to
 render them.
 
-The implementation uses the Megaparsec parsing library to parse the
-templates which results in superior quality of error messages.
-
 For rendering you only need to create Aeson's `Value` where you put the data
 to interpolate. Since the library re-uses Aeson's instances and most data
 types in Haskell ecosystem are instances of classes like
 `Data.Aeson.ToJSON`, the whole process is very simple for end user.
 
-Template Haskell helpers for compilation of templates at compile time are
-available in the `Text.Mustache.Compile.TH` module. The helpers are
-currently available only for GHC 8 users though.
-
 One feature that is not currently supported is lambdas. The feature is
 marked as optional in the spec and can be emulated via processing of parsed
 template representation. The decision to drop lambdas is intentional, for
 the sake of simplicity and better integration with Aeson.
+
+## Differences from `stache`
+
+- Instead of `megaparsec`, `parsec` is used. Error message quality is most likely degraded.
+- There are no TemplateHaskell used; yet there are no helpers provided.
+- Support for GHC-7.4.2 &ndash; GHC-8.2.1
 
 ## Quick start
 
@@ -42,8 +37,7 @@ module Main (main) where
 
 import Data.Aeson
 import Data.Text
-import Text.Megaparsec
-import Text.Mustache
+import Text.Microstache
 import qualified Data.Text.Lazy.IO as TIO
 
 main :: IO ()
@@ -51,7 +45,7 @@ main = do
   let res = compileMustacheText "foo"
         "Hi, {{name}}! You have:\n{{#things}}\n  * {{.}}\n{{/things}}\n"
   case res of
-    Left err -> putStrLn (parseErrorPretty err)
+    Left err -> putStrLn (show err)
     Right template -> TIO.putStr $ renderMustache template $ object
       [ "name"   .= ("John" :: Text)
       , "things" .= ["pen" :: Text, "candle", "egg"]
@@ -77,6 +71,6 @@ helpful:
 
 ## License
 
-Copyright © 2016–2017 Stack Builders
+Copyright © 2016–2017 Stack Builders, 2017 Oleg Grenrus
 
 Distributed under BSD 3 clause license.

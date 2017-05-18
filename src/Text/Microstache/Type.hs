@@ -1,5 +1,5 @@
 -- |
--- Module      :  Text.Mustache.Type
+-- Module      :  Text.Microstache.Type
 -- Copyright   :  © 2016–2017 Stack Buliders
 -- License     :  BSD 3 clause
 --
@@ -8,7 +8,7 @@
 -- Portability :  portable
 --
 -- Types used by the package. You don't usually need to import the module,
--- because "Text.Mustache" re-exports everything you may need, import that
+-- because "Text.Microstache" re-exports everything you may need, import that
 -- module instead.
 
 {-# LANGUAGE CPP                        #-}
@@ -17,7 +17,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-module Text.Mustache.Type
+module Text.Microstache.Type
   ( Template (..)
   , Node (..)
   , Key (..)
@@ -26,6 +26,7 @@ module Text.Mustache.Type
   , MustacheException (..) )
 where
 
+import Data.Word (Word)
 import Control.DeepSeq
 import Control.Exception (Exception(..))
 import Data.Data (Data)
@@ -35,7 +36,7 @@ import Data.String (IsString (..))
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 import GHC.Generics
-import Text.Megaparsec
+import Text.Parsec
 import qualified Data.Map  as M
 import qualified Data.Text as T
 
@@ -67,7 +68,7 @@ data Node
   | UnescapedVar    Key        -- ^ Unescaped variable
   | Section         Key [Node] -- ^ Mustache section
   | InvertedSection Key [Node] -- ^ Inverted section
-  | Partial         PName (Maybe Pos)
+  | Partial         PName (Maybe Word)
     -- ^ Partial with indentation level ('Nothing' means it was inlined)
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -86,8 +87,6 @@ instance NFData Key
 
 -- | Pretty-print a key, this is helpful, for example, if you want to
 -- display an error message.
---
--- @since 0.2.0
 
 showKey :: Key -> Text
 showKey (Key []) = "<implicit>"
@@ -108,7 +107,7 @@ instance NFData PName
 -- referenced values were not provided.
 
 data MustacheException
-  = MustacheParserException (ParseError Char Dec)
+  = MustacheParserException ParseError
     -- ^ Template parser has failed. This contains the parse error.
     --
     -- /Before version 0.2.0 it was called 'MustacheException'./
@@ -116,13 +115,11 @@ data MustacheException
     -- ^ A referenced value was not provided. The exception provides info
     -- about partial in which the issue happened 'PName' and name of the
     -- missing key 'Key'.
-    --
-    -- @since 0.2.0
   deriving (Eq, Show, Typeable, Generic)
 
 #if MIN_VERSION_base(4,8,0)
 instance Exception MustacheException where
-  displayException (MustacheParserException e) = parseErrorPretty e
+  displayException (MustacheParserException e) = show e
   displayException (MustacheRenderException pname key) =
     "Referenced value was not provided in partial \"" ++ T.unpack (unPName pname) ++
     "\", key: " ++ T.unpack (showKey key)

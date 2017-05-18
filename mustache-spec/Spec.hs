@@ -7,14 +7,13 @@ module Main (main) where
 import Control.Monad
 import Data.Aeson
 import Data.ByteString (ByteString)
-import Data.FileEmbed (embedFile)
 import Data.Map (Map, (!))
 import Data.Text (Text)
-import Data.Yaml
 import Test.Hspec
-import Text.Megaparsec
-import Text.Mustache
-import Text.Mustache.Parser
+import Text.Parsec
+import Text.Microstache
+import Text.Microstache.Parser
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map       as M
 import qualified Data.Text      as T
 import qualified Data.Text.Lazy as TL
@@ -54,35 +53,40 @@ instance FromJSON Test where
     return Test {..}
 
 main :: IO ()
-main = hspec spec
+main = spec >>= hspec
 
-spec :: Spec
+spec :: IO Spec
 spec = do
-  specData "Comments"      $(embedFile "specification/comments.yml")
-  specData "Delimiters"    $(embedFile "specification/delimiters.yml")
-  specData "Interpolation" $(embedFile "specification/interpolation.yml")
-  specData "Inverted"      $(embedFile "specification/inverted.yml")
-  specData "Partials"      $(embedFile "specification/partials.yml")
-  specData "Sections"      $(embedFile "specification/sections.yml")
+  s1 <- specData "Comments"      "specification/comments.json"
+  s2 <- specData "Delimiters"    "specification/delimiters.json"
+  s3 <- specData "Interpolation" "specification/interpolation.json"
+  s4 <- specData "Inverted"      "specification/inverted.json"
+  s5 <- specData "Partials"      "specification/partials.json"
+  s6 <- specData "Sections"      "specification/sections.json"
+  return $ s1 >> s2 >> s3 >> s4 >> s5 >> s6
 
-specData :: String -> ByteString -> Spec
-specData aspect bytes = describe aspect $ do
-  let handleError = expectationFailure . parseErrorPretty
-  case decodeEither' bytes of
-    Left err ->
-      it "should load YAML specs first" $
-        expectationFailure (prettyPrintParseException err)
-    Right SpecFile {..} ->
-      forM_ specTests $ \Test {..} ->
-        it (testName ++ ": " ++ testDesc) $
-          case compileMustacheText (PName $ T.pack testName) testTemplate of
-            Left perr -> handleError perr
-            Right Template {..} -> do
-              ps1 <- forM (M.keys testPartials) $ \k -> do
-                let pname = PName k
-                case parseMustache (T.unpack k) (testPartials ! k) of
-                  Left perr -> handleError perr >> undefined
-                  Right ns  -> return (pname, ns)
-              let ps2 = M.fromList ps1 `M.union` templateCache
-              renderMustache (Template templateActual ps2) testData
-                `shouldBe` testExpected
+specData :: String -> FilePath -> IO Spec
+specData aspect name = do
+    bytes <- BSL.readFile name
+    return (specData' bytes)
+  where
+    specData' bytes = describe aspect $ do
+      let handleError = expectationFailure . show 
+      case eitherDecode bytes of
+        Left err ->
+          it "should load YAML specs first" $
+            expectationFailure (show err)
+        Right SpecFile {..} ->
+          forM_ specTests $ \Test {..} ->
+            it (testName ++ ": " ++ testDesc) $
+              case compileMustacheText (PName $ T.pack testName) testTemplate of
+                Left perr -> handleError perr
+                Right Template {..} -> do
+                  ps1 <- forM (M.keys testPartials) $ \k -> do
+                    let pname = PName k
+                    case parseMustache (T.unpack k) (testPartials ! k) of
+                      Left perr -> handleError perr >> undefined
+                      Right ns  -> return (pname, ns)
+                  let ps2 = M.fromList ps1 `M.union` templateCache
+                  renderMustache (Template templateActual ps2) testData
+                    `shouldBe` testExpected

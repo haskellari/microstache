@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Text.Mustache.RenderSpec
+module Text.Microstache.RenderSpec
   ( main
   , spec )
 where
@@ -10,9 +10,9 @@ import Control.Exception (evaluate)
 import Data.Aeson (object, KeyValue (..), Value (..))
 import Data.Text (Text)
 import Test.Hspec
-import Text.Megaparsec
-import Text.Mustache.Render
-import Text.Mustache.Type
+import Text.Parsec
+import Text.Microstache.Render
+import Text.Microstache.Type
 import qualified Data.Map as M
 
 #if !MIN_VERSION_base(4,8,0)
@@ -40,6 +40,8 @@ spec = describe "renderMustache" $ do
       `shouldBe` "<html>&\"something\"</html>"
   context "when rendering a section" $ do
     let nodes = [Section (key "foo") [UnescapedVar (key "bar"), TextBlock "*"]]
+    {-
+    Not correct according to spec
     context "when the key is not present" $
       it "throws the correct exception" $
         evaluate (r nodes (object [])) `shouldThrow`
@@ -48,6 +50,7 @@ spec = describe "renderMustache" $ do
       it "throws the correct exception" $
         evaluate (r nodes (object ["foo" .= ([1] :: [Int])])) `shouldThrow`
           (== MustacheRenderException "test" (Key ["foo","bar"]))
+    -}
     context "when the key is present" $ do
       context "when the key is a “false” value" $ do
         it "skips the Null value" $
@@ -102,10 +105,12 @@ spec = describe "renderMustache" $ do
             `shouldBe` "x"
   context "when rendering an inverted section" $ do
     let nodes = [InvertedSection (key "foo") [TextBlock "Here!"]]
+    {-
     context "when the key is not present" $
       it "throws the correct exception" $
         evaluate (r nodes (object [])) `shouldThrow`
           (== MustacheRenderException "test" (key "foo"))
+    -}
     context "when the key is present" $ do
       context "when the key is a “false” value" $ do
         it "renders with Null value" $
@@ -124,7 +129,7 @@ spec = describe "renderMustache" $ do
         it "skips non-empty list" $
           r nodes (object ["foo" .= [True]]) `shouldBe` ""
   context "when rendering a partial" $ do
-    let nodes = [ Partial "partial" (Just $ unsafePos 4)
+    let nodes = [ Partial "partial" (Just 4)
                 , TextBlock "*" ]
     it "skips missing partial" $
       r nodes Null `shouldBe` "   *"
