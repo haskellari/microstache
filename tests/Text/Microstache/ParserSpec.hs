@@ -1,17 +1,17 @@
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Text.Mustache.ParserSpec
+module Text.Microstache.ParserSpec
   ( main
   , spec )
 where
 
+import Control.Monad (unless)
 import Data.List.NonEmpty (NonEmpty (..))
 import Test.Hspec
-import Test.Hspec.Megaparsec
-import Text.Megaparsec
-import Text.Mustache.Parser
-import Text.Mustache.Type
+import Text.Parsec
+import Text.Microstache.Parser
+import Text.Microstache.Type
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Set           as S
 
@@ -67,13 +67,13 @@ spec = describe "parseMustache" $ do
   context "when parsing a partial" $ do
     it "parses a partial with white space" $
       p "{{> that-s_my-partial }}" `shouldParse`
-        [Partial "that-s_my-partial" (Just $ unsafePos 1)]
+        [Partial "that-s_my-partial" (Just 1)]
     it "parses a partial without white space" $
       p "{{>that-s_my-partial}}" `shouldParse`
-        [Partial "that-s_my-partial" (Just $ unsafePos 1)]
+        [Partial "that-s_my-partial" (Just 1)]
     it "handles indented partial correctly" $
       p "   {{> next_one }}" `shouldParse`
-        [Partial "next_one" (Just $ unsafePos 4)]
+        [Partial "next_one" (Just 4)]
   context "when running into delimiter change" $ do
     it "has effect" $
       p "{{=<< >>=}}<<var>>{{var}}" `shouldParse`
@@ -91,17 +91,25 @@ spec = describe "parseMustache" $ do
       p "{{#section}}{{=<< >>=}}<</section>><<var>>" `shouldParse`
         [Section (key "section") [], EscapedVar (key "var")]
   context "when given malformed input" $ do
-    let pos l c = SourcePos "" (unsafePos l) (unsafePos c) :| []
-        ne      = NE.fromList
     it "rejects unclosed tags" $
-      p "{{ name " `shouldFailWith` ParseError
-        { errorPos        = pos 1 9
-        , errorUnexpected = S.singleton EndOfInput
-        , errorExpected   = S.singleton (Tokens $ ne "}}")
-        , errorCustom     = S.empty }
+      shouldFailParse $ p "{{ name"
     it "rejects unknown tags" $
-      p "{{? boo }}" `shouldFailWith` ParseError
-        { errorPos        = pos 1 3
-        , errorUnexpected = S.singleton (Tokens $ ne "?")
-        , errorExpected   = S.singleton (Label  $ ne "key")
-        , errorCustom     = S.empty }
+      shouldFailParse $ p "{{? boo }}"
+
+-------------------------------------------------------------------------------
+-- Tools
+-------------------------------------------------------------------------------
+
+shouldParse :: (Eq a, Show a) => Either ParseError a -> a -> Expectation
+shouldParse (Left e) v = expectationFailure $
+    "expected: " ++ show v ++
+    "\nbut parsing failed with error:\n" ++ show e
+shouldParse (Right x) v = unless (x == v) $ expectationFailure $
+    "expected: " ++ show v ++
+    "\nbut got: " ++ show x
+
+shouldFailParse :: (Eq a, Show a) => Either ParseError a -> Expectation
+shouldFailParse (Left _) = pure ()
+shoulwFailParse (Right x) = expectationFailure $ 
+    "expected parse failure, got " ++ show x
+
