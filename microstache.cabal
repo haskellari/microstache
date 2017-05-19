@@ -15,18 +15,17 @@ description:
   .
   Based on @stache@ library, which uses @megaparsec@.
   This library uses @parsec@, thus the name: @microstache@.
+
 extra-source-files:
   CHANGELOG.md
    README.md
-data-files:
   specification/comments.json
   specification/delimiters.json
   specification/interpolation.json
   specification/inverted.json
   specification/partials.json
   specification/sections.json
-  templates/foo.mustache
-  templates/bar.mustache
+
 tested-with:
   GHC==7.4.2,
   GHC==7.6.3,
