@@ -23,7 +23,7 @@ import Data.Functor.Identity
 import Data.Maybe (catMaybes)
 import Data.Text.Lazy (Text)
 import Text.Parsec hiding ((<|>))
-import Text.Parsec.Char
+import Text.Parsec.Char ()
 import Data.Word (Word)
 import Text.Microstache.Type
 import qualified Data.Text             as T

@@ -23,7 +23,9 @@ module Text.Microstache.Type
   , Key (..)
   , showKey
   , PName (..)
-  , MustacheException (..) )
+  , MustacheException (..)
+  , MustacheWarning (..)
+  )
 where
 
 import Data.Word (Word)
@@ -109,13 +111,13 @@ instance NFData PName
 data MustacheException
   = MustacheParserException ParseError
     -- ^ Template parser has failed. This contains the parse error.
-    --
-    -- /Before version 0.2.0 it was called 'MustacheException'./
   | MustacheRenderException PName Key
     -- ^ A referenced value was not provided. The exception provides info
     -- about partial in which the issue happened 'PName' and name of the
     -- missing key 'Key'.
   deriving (Eq, Show, Typeable, Generic)
+
+{-# DEPRECATED MustacheRenderException "Not thrown anymore, will be removed in the next major version of microstache" #-}
 
 #if MIN_VERSION_base(4,8,0)
 instance Exception MustacheException where
@@ -125,4 +127,21 @@ instance Exception MustacheException where
     "\", key: " ++ T.unpack (showKey key)
 #else
 instance Exception MustacheException
+#endif
+
+data MustacheWarning
+  = MustacheVariableNotFound Key
+    -- ^ The template contained a variable for which there was no data counterpart in the current context
+  | MustacheDirectlyRenderedValue Key
+    -- ^ A complex value such as an Object or Array was directly rendered into the template
+  deriving (Eq, Show, Typeable, Generic)
+
+#if MIN_VERSION_base(4,8,0)
+instance Exception MustacheWarning where
+  displayException (MustacheVariableNotFound key) = 
+    "Referenced value was not provided, key: " ++ T.unpack (showKey key)
+  displayException (MustacheDirectlyRenderedValue key) = 
+    "Complex value rendered as such, key: " ++ T.unpack (showKey key)
+#else
+instance Exception MustacheWarning
 #endif

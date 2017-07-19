@@ -71,7 +71,7 @@ specData aspect name = do
     return (specData' bytes)
   where
     specData' bytes = describe aspect $ do
-      let handleError = expectationFailure . show 
+      let handleError = expectationFailure . show
       case eitherDecode bytes of
         Left err ->
           it "should load YAML specs first" $
@@ -88,5 +88,6 @@ specData aspect name = do
                       Left perr -> handleError perr >> undefined
                       Right ns  -> return (pname, ns)
                   let ps2 = M.fromList ps1 `M.union` templateCache
-                  renderMustache (Template templateActual ps2) testData
-                    `shouldBe` testExpected
+                  let (_ws, t) = renderMustacheW (Template templateActual ps2) testData
+                  -- _ <- traverse print _ws
+                  t `shouldBe` testExpected

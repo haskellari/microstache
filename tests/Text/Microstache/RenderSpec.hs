@@ -24,10 +24,14 @@ main = hspec spec
 
 spec :: Spec
 spec = describe "renderMustache" $ do
-  let r ns value =
+  let w ns value =
+        let template = Template "test" (M.singleton "test" ns)
+        in fst (renderMustacheW template value)
+      r ns value = 
         let template = Template "test" (M.singleton "test" ns)
         in renderMustache template value
-      key = Key . pure
+      key = Key . return
+
   it "leaves text block “as is”" $
     r [TextBlock "a text block"] Null `shouldBe` "a text block"
   it "renders escaped variables correctly" $
@@ -38,19 +42,23 @@ spec = describe "renderMustache" $ do
     r [UnescapedVar (key "foo")]
       (object ["foo" .= ("<html>&\"something\"</html>" :: Text)])
       `shouldBe` "<html>&\"something\"</html>"
+  context "when rendering a variable" $ do
+    it "warns when variable doesn't exist" $
+      w [EscapedVar (key "foo")] (object []) `shouldBe`
+        [MustacheVariableNotFound (key "foo")]
+    it "warns when variable is non-scalar" $
+      w [EscapedVar (key "foo")] (object [ "foo" .= object []]) `shouldBe`
+        [MustacheDirectlyRenderedValue (key "foo")]
   context "when rendering a section" $ do
     let nodes = [Section (key "foo") [UnescapedVar (key "bar"), TextBlock "*"]]
-    {-
-    Not correct according to spec
     context "when the key is not present" $
-      it "throws the correct exception" $
-        evaluate (r nodes (object [])) `shouldThrow`
-          (== MustacheRenderException "test" (key "foo"))
+      it "warns with the correct warning" $
+        w nodes (object []) `shouldBe`
+          [MustacheVariableNotFound (key "foo")]
     context "when the key is not present inside a section" $
-      it "throws the correct exception" $
-        evaluate (r nodes (object ["foo" .= ([1] :: [Int])])) `shouldThrow`
-          (== MustacheRenderException "test" (Key ["foo","bar"]))
-    -}
+      it "warns with the correct warning" $
+        w nodes (object ["foo" .= ([1] :: [Int])]) `shouldBe`
+          [MustacheVariableNotFound (Key ["foo","bar"])]
     context "when the key is present" $ do
       context "when the key is a “false” value" $ do
         it "skips the Null value" $
@@ -105,12 +113,10 @@ spec = describe "renderMustache" $ do
             `shouldBe` "x"
   context "when rendering an inverted section" $ do
     let nodes = [InvertedSection (key "foo") [TextBlock "Here!"]]
-    {-
     context "when the key is not present" $
-      it "throws the correct exception" $
-        evaluate (r nodes (object [])) `shouldThrow`
-          (== MustacheRenderException "test" (key "foo"))
-    -}
+      it "warns the correct warning" $
+        w nodes (object []) `shouldBe`
+          [MustacheVariableNotFound (key "foo")]
     context "when the key is present" $ do
       context "when the key is a “false” value" $ do
         it "renders with Null value" $

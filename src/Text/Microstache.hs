@@ -78,12 +78,15 @@ module Text.Microstache
   , Key (..)
   , PName (..)
   , MustacheException (..)
+  , MustacheWarning (..)
     -- * Compiling
   , compileMustacheDir
   , compileMustacheFile
   , compileMustacheText
     -- * Rendering
-  , renderMustache )
+  , renderMustache
+  , renderMustacheW
+  )
 where
 
 import Text.Microstache.Compile

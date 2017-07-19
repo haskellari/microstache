@@ -115,8 +115,8 @@ withException
 withException = either (throwIO . MustacheParserException) return
 
 makeAbsolute' :: FilePath -> IO FilePath
-makeAbsolute' path =
-    fmap (matchTrailingSeparator path . F.normalise) (prependCurrentDirectory path)
+makeAbsolute' path0 =
+    fmap (matchTrailingSeparator path0 . F.normalise) (prependCurrentDirectory path0)
   where
     prependCurrentDirectory :: FilePath -> IO FilePath
     prependCurrentDirectory path =
