@@ -80,6 +80,8 @@ renderMustache :: Template -> Value -> TL.Text
 renderMustache t = snd . renderMustacheW t
 
 -- | Like 'renderMustache' but also return a list of warnings.
+--
+-- @since 1.0.1
 renderMustacheW :: Template -> Value -> ([MustacheWarning], TL.Text)
 renderMustacheW t =
   runRender (renderPartial (templateActual t) Nothing renderNode) t

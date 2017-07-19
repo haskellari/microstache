@@ -24,7 +24,9 @@ module Text.Microstache.Type
   , showKey
   , PName (..)
   , MustacheException (..)
+  , displayMustacheException
   , MustacheWarning (..)
+  , displayMustacheWarning
   )
 where
 
@@ -119,16 +121,19 @@ data MustacheException
 
 {-# DEPRECATED MustacheRenderException "Not thrown anymore, will be removed in the next major version of microstache" #-}
 
-#if MIN_VERSION_base(4,8,0)
-instance Exception MustacheException where
-  displayException (MustacheParserException e) = show e
-  displayException (MustacheRenderException pname key) =
+-- | @since 1.0.1
+displayMustacheException :: MustacheException -> String
+displayMustacheException (MustacheParserException e) = show e
+displayMustacheException (MustacheRenderException pname key) =
     "Referenced value was not provided in partial \"" ++ T.unpack (unPName pname) ++
     "\", key: " ++ T.unpack (showKey key)
-#else
-instance Exception MustacheException
+
+instance Exception MustacheException where
+#if MIN_VERSION_base(4,8,0)
+    displayException = displayMustacheException
 #endif
 
+-- | @since 1.0.1
 data MustacheWarning
   = MustacheVariableNotFound Key
     -- ^ The template contained a variable for which there was no data counterpart in the current context
@@ -136,12 +141,14 @@ data MustacheWarning
     -- ^ A complex value such as an Object or Array was directly rendered into the template
   deriving (Eq, Show, Typeable, Generic)
 
-#if MIN_VERSION_base(4,8,0)
-instance Exception MustacheWarning where
-  displayException (MustacheVariableNotFound key) = 
+-- | @since 1.0.1
+displayMustacheWarning :: MustacheWarning -> String
+displayMustacheWarning (MustacheVariableNotFound key) = 
     "Referenced value was not provided, key: " ++ T.unpack (showKey key)
-  displayException (MustacheDirectlyRenderedValue key) = 
+displayMustacheWarning (MustacheDirectlyRenderedValue key) = 
     "Complex value rendered as such, key: " ++ T.unpack (showKey key)
-#else
-instance Exception MustacheWarning
+
+instance Exception MustacheWarning where
+#if MIN_VERSION_base(4,8,0)
+    displayException = displayMustacheWarning
 #endif

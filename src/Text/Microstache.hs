@@ -78,7 +78,9 @@ module Text.Microstache
   , Key (..)
   , PName (..)
   , MustacheException (..)
+  , displayMustacheException
   , MustacheWarning (..)
+  , displayMustacheWarning
     -- * Compiling
   , compileMustacheDir
   , compileMustacheFile
