@@ -19,7 +19,11 @@ where
 
 import Control.Monad (when, forM_, unless)
 import Control.Monad.Trans.Reader (ReaderT (..), asks, local)
+#if MIN_VERSION_transformers(0,4,0)
 import Control.Monad.Trans.State.Strict (State, modify', execState)
+#else
+import Control.Monad.Trans.State.Strict (State, get, put, execState)
+#endif
 import Control.Monad.Trans.Class (lift)
 import Data.Aeson (Value (..), encode)
 import Data.Monoid (mempty)
@@ -41,6 +45,13 @@ import qualified Data.Vector            as V
 
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
+#endif
+
+#if !(MIN_VERSION_transformers(0,4,0))
+modify' :: (s -> s) -> State s ()
+modify' f = do
+    s <- get
+    put $! f s
 #endif
 
 ----------------------------------------------------------------------------

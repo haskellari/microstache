@@ -1,3 +1,7 @@
+## microstache 1.0.1.1
+
+- Fix build against `transformers-0.3`
+
 ## microstache 1.0.1
 
 - Add `renderMustacheW`
