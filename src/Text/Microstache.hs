@@ -18,7 +18,7 @@
 -- you put the data to interpolate. Since the library re-uses Aeson's
 -- instances and most data types in Haskell ecosystem are instances of
 -- classes like 'Data.Aeson.ToJSON', the whole process is very simple for
--- end user.
+-- the end user.
 --
 -- Template Haskell helpers for compilation of templates at compile time are
 -- available in the "Text.Microstache.Compile.TH" module. The helpers are
