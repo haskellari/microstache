@@ -14,9 +14,6 @@
 -- functions to compile templates (from directory, from file, and from lazy
 -- text) and one to render them.
 --
--- The implementation uses the Megaparsec parsing library to parse the
--- templates which results in superior quality of error messages.
---
 -- For rendering you only need to create Aeson's 'Data.Aeson.Value' where
 -- you put the data to interpolate. Since the library re-uses Aeson's
 -- instances and most data types in Haskell ecosystem are instances of
@@ -41,7 +38,6 @@
 -- >
 -- > import Data.Aeson
 -- > import Data.Text
--- > import Text.Megaparsec
 -- > import Text.Microstache
 -- > import qualified Data.Text.Lazy.IO as TIO
 -- >
@@ -50,7 +46,7 @@
 -- >   let res = compileMustacheText "foo"
 -- >         "Hi, {{name}}! You have:\n{{#things}}\n  * {{.}}\n{{/things}}\n"
 -- >   case res of
--- >     Left err -> putStrLn (parseErrorPretty err)
+-- >     Left err -> print err
 -- >     Right template -> TIO.putStr $ renderMustache template $ object
 -- >       [ "name"   .= ("John" :: Text)
 -- >       , "things" .= ["pen" :: Text, "candle", "egg"]
