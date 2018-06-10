@@ -1,6 +1,6 @@
 name:                 microstache
 version:              1.0.1.1
-x-revision:           1
+x-revision:           2
 cabal-version:        >= 1.10
 license:              BSD3
 license-file:         LICENSE
@@ -42,7 +42,7 @@ source-repository head
 
 library
   build-depends:
-    aeson                  >=0.11    && < 1.4,
+    aeson                  >=0.11    && < 1.5,
     base                   >=4.5     && < 4.12,
     bytestring             >=0.9.2.1 && < 0.11,
     containers             >=0.4.2.1 && < 0.6,
