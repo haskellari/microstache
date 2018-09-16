@@ -27,7 +27,7 @@ spec = describe "renderMustache" $ do
   let w ns value =
         let template = Template "test" (M.singleton "test" ns)
         in fst (renderMustacheW template value)
-      r ns value = 
+      r ns value =
         let template = Template "test" (M.singleton "test" ns)
         in renderMustache template value
       key = Key . return
@@ -36,8 +36,8 @@ spec = describe "renderMustache" $ do
     r [TextBlock "a text block"] Null `shouldBe` "a text block"
   it "renders escaped variables correctly" $
     r [EscapedVar (key "foo")]
-      (object ["foo" .= ("<html>&\"something\"</html>" :: Text)])
-      `shouldBe` "&lt;html&gt;&amp;&quot;something&quot;&lt;/html&gt;"
+       (object ["foo" .= ("<html>&\"'something'\"</html>" :: Text)])
+      `shouldBe` "&lt;html&gt;&amp;&quot;&#39;something&#39;&quot;&lt;/html&gt;"
   it "renders unescaped variables “as is”" $
     r [UnescapedVar (key "foo")]
       (object ["foo" .= ("<html>&\"something\"</html>" :: Text)])
