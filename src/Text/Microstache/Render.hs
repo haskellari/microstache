@@ -11,37 +11,39 @@
 -- import the module, because "Text.Microstache" re-exports everything you may
 -- need, import that module instead.
 
-{-# LANGUAGE CPP                #-}
-{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Text.Microstache.Render
   ( renderMustache, renderMustacheW )
 where
 
-import Control.Monad (when, forM_, unless)
+import Control.Monad              (forM_, unless, when)
+import Control.Monad.Trans.Class  (lift)
 import Control.Monad.Trans.Reader (ReaderT (..), asks, local)
-#if MIN_VERSION_transformers(0,4,0)
-import Control.Monad.Trans.State.Strict (State, modify', execState)
-#else
-import Control.Monad.Trans.State.Strict (State, get, put, execState)
-#endif
-import Control.Monad.Trans.Class (lift)
-import Data.Aeson (Value (..), encode)
-import Data.Monoid (mempty)
-import Data.Semigroup ((<>))
-import Data.Foldable (asum)
-import Data.List (tails)
-import Data.List.NonEmpty (NonEmpty (..))
-import Data.Text (Text)
-import Data.Word (Word)
+import Data.Aeson                 (Value (..), encode)
+import Data.Foldable              (asum)
+import Data.List                  (tails)
+import Data.List.NonEmpty         (NonEmpty (..))
+import Data.Monoid                (mempty)
+import Data.Semigroup             ((<>))
+import Data.Text                  (Text)
+import Data.Word                  (Word)
 import Text.Microstache.Type
-import qualified Data.HashMap.Strict    as H
-import qualified Data.List.NonEmpty     as NE
-import qualified Data.Map               as M
-import qualified Data.Text              as T
-import qualified Data.Text.Lazy         as TL
-import qualified Data.Text.Lazy.Encoding     as TL
-import qualified Data.Text.Lazy.Builder as B
-import qualified Data.Vector            as V
+
+import qualified Data.HashMap.Strict     as HM
+import qualified Data.List.NonEmpty      as NE
+import qualified Data.Map                as Map
+import qualified Data.Text               as T
+import qualified Data.Text.Lazy          as LT
+import qualified Data.Text.Lazy.Builder  as B
+import qualified Data.Text.Lazy.Encoding as LTE
+import qualified Data.Vector             as V
+
+#if MIN_VERSION_transformers(0,4,0)
+import Control.Monad.Trans.State.Strict (State, execState, modify')
+#else
+import Control.Monad.Trans.State.Strict (State, execState, get, put)
+#endif
 
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
@@ -59,7 +61,7 @@ modify' f = do
 
 -- | Synonym for the monad we use for rendering. It allows to share context
 -- and accumulate the result as 'B.Builder' data which is then turned into
--- lazy 'TL.Text'.
+-- lazy 'LT.Text'.
 
 type Render a = ReaderT RenderContext (State S) a
 
@@ -87,13 +89,13 @@ data RenderContext = RenderContext
 
 -- | Render a Mustache 'Template' using Aeson's 'Value' to get actual values
 -- for interpolation.
-renderMustache :: Template -> Value -> TL.Text
+renderMustache :: Template -> Value -> LT.Text
 renderMustache t = snd . renderMustacheW t
 
 -- | Like 'renderMustache' but also return a list of warnings.
 --
 -- @since 1.0.1
-renderMustacheW :: Template -> Value -> ([MustacheWarning], TL.Text)
+renderMustacheW :: Template -> Value -> ([MustacheWarning], LT.Text)
 renderMustacheW t =
   runRender (renderPartial (templateActual t) Nothing renderNode) t
 
@@ -128,7 +130,7 @@ renderNode (Partial pname indent) =
 -- | Run 'Render' monad given template to render and a 'Value' to take
 -- values from.
 
-runRender :: Render a -> Template -> Value -> ([MustacheWarning], TL.Text)
+runRender :: Render a -> Template -> Value -> ([MustacheWarning], LT.Text)
 runRender m t v = case execState (runReaderT m rc) (S id mempty) of
     S ws b -> (ws [], B.toLazyText b)
   where
@@ -187,7 +189,7 @@ renderPartial pname i f =
 getNodes :: Render [Node]
 getNodes = do
   Template actual cache <- asks rcTemplate
-  return (M.findWithDefault [] actual cache)
+  return (Map.findWithDefault [] actual cache)
 {-# INLINE getNodes #-}
 
 -- | Render many nodes.
@@ -233,7 +235,7 @@ simpleLookup
   -> Maybe Value       -- ^ Looked-up value
 simpleLookup _ (Key [])     obj        = return obj
 simpleLookup c (Key (k:ks)) (Object m) =
-  case H.lookup k m of
+  case HM.lookup k m of
     Nothing -> if c then Just Null else Nothing
     Just  v -> simpleLookup True (Key ks) v
 simpleLookup _ _ _ = Nothing
@@ -278,7 +280,7 @@ buildIndent (Just p) = let n = fromIntegral p - 1 in T.replicate n " "
 isBlank :: Value -> Bool
 isBlank Null         = True
 isBlank (Bool False) = True
-isBlank (Object   m) = H.null m
+isBlank (Object   m) = HM.null m
 isBlank (Array    a) = V.null a
 isBlank (String   s) = T.null s
 isBlank _            = False
@@ -298,7 +300,7 @@ renderValue k v = case v of
         render v
     _          -> render v
   where
-    render = return . TL.toStrict . TL.decodeUtf8 . encode
+    render = return . LT.toStrict . LTE.decodeUtf8 . encode
 {-# INLINE renderValue #-}
 
 -- | Escape HTML represented as strict 'Text'.

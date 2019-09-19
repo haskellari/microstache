@@ -30,18 +30,19 @@ module Text.Microstache.Type
   )
 where
 
-import Data.Word (Word)
 import Control.DeepSeq
-import Control.Exception (Exception(..))
-import Data.Data (Data)
-import Data.Map (Map)
+import Control.Exception (Exception (..))
+import Data.Data         (Data)
+import Data.Map          (Map)
 import Data.Semigroup
-import Data.String (IsString (..))
-import Data.Text (Text)
-import Data.Typeable (Typeable)
+import Data.String       (IsString (..))
+import Data.Text         (Text)
+import Data.Typeable     (Typeable)
+import Data.Word         (Word)
 import GHC.Generics
 import Text.Parsec
-import qualified Data.Map  as M
+
+import qualified Data.Map  as Map
 import qualified Data.Text as T
 
 -- | Mustache template as name of “top-level” template and a collection of
@@ -62,7 +63,7 @@ data Template = Template
   } deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Semigroup Template where
-  (Template pname x) <> (Template _ y) = Template pname (M.union x y)
+  (Template pname x) <> (Template _ y) = Template pname (Map.union x y)
 
 -- | Structural element of template.
 
@@ -143,9 +144,9 @@ data MustacheWarning
 
 -- | @since 1.0.1
 displayMustacheWarning :: MustacheWarning -> String
-displayMustacheWarning (MustacheVariableNotFound key) = 
+displayMustacheWarning (MustacheVariableNotFound key) =
     "Referenced value was not provided, key: " ++ T.unpack (showKey key)
-displayMustacheWarning (MustacheDirectlyRenderedValue key) = 
+displayMustacheWarning (MustacheDirectlyRenderedValue key) =
     "Complex value rendered as such, key: " ++ T.unpack (showKey key)
 
 instance Exception MustacheWarning where
