@@ -15,18 +15,19 @@ module Text.Microstache.Parser
   ( parseMustache )
 where
 
-import Control.Applicative hiding (many)
+import Control.Applicative   hiding (many)
 import Control.Monad
-import Data.Char (isSpace, isAlphaNum)
-import Data.List (intercalate)
+import Data.Char             (isAlphaNum, isSpace)
 import Data.Functor.Identity
-import Data.Maybe (catMaybes)
-import Data.Text.Lazy (Text)
-import Text.Parsec hiding ((<|>))
-import Text.Parsec.Char ()
-import Data.Word (Word)
+import Data.List             (intercalate)
+import Data.Maybe            (catMaybes)
+import Data.Text.Lazy        (Text)
+import Data.Word             (Word)
 import Text.Microstache.Type
-import qualified Data.Text             as T
+import Text.Parsec           hiding ((<|>))
+import Text.Parsec.Char ()
+
+import qualified Data.Text as T
 
 ----------------------------------------------------------------------------
 -- Parser

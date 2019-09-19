@@ -20,16 +20,17 @@ module Text.Microstache.Compile
   , compileMustacheText )
 where
 
-import Control.Exception (throwIO)
-import Control.Monad (foldM, filterM)
-import Data.Text.Lazy (Text)
+import Control.Exception       (throwIO)
+import Control.Monad           (filterM, foldM)
+import Data.Text.Lazy          (Text)
 import System.Directory
-import Text.Parsec
 import Text.Microstache.Parser
 import Text.Microstache.Type
-import qualified Data.Map          as M
+import Text.Parsec
+
+import qualified Data.Map          as Map
 import qualified Data.Text         as T
-import qualified Data.Text.Lazy.IO as TL
+import qualified Data.Text.Lazy.IO as LT
 import qualified System.FilePath   as F
 
 #if !MIN_VERSION_base(4,8,0)
@@ -49,12 +50,12 @@ compileMustacheDir
   -> IO Template       -- ^ The resulting template
 compileMustacheDir pname path =
   getMustacheFilesInDir path >>=
-  fmap selectKey . foldM f (Template undefined M.empty)
+  fmap selectKey . foldM f (Template undefined Map.empty)
   where
     selectKey t = t { templateActual = pname }
     f (Template _ old) fp = do
       Template _ new <- compileMustacheFile fp
-      return (Template undefined (M.union new old))
+      return (Template undefined (Map.union new old))
 
 -- | Return a list of templates found in given directory. The returned paths
 -- are absolute.
@@ -63,7 +64,7 @@ getMustacheFilesInDir
   :: FilePath          -- ^ Directory with templates
   -> IO [FilePath]
 getMustacheFilesInDir path =
-   (getDirectoryContents path) >>=
+  getDirectoryContents path >>=
   filterM isMustacheFile . fmap (F.combine path) >>=
   mapM makeAbsolute'
 
@@ -75,10 +76,10 @@ compileMustacheFile
   :: FilePath          -- ^ Location of the file
   -> IO Template
 compileMustacheFile path =
-   (TL.readFile path) >>= withException . compile
+    LT.readFile path >>= withException . compile
   where
     pname = pathToPName path
-    compile = fmap (Template pname . M.singleton pname) . parseMustache path
+    compile = fmap (Template pname . Map.singleton pname) . parseMustache path
 
 -- | Compile Mustache template from a lazy 'Text' value. The cache will
 -- contain only this template named according to given 'PName'.
@@ -88,7 +89,7 @@ compileMustacheText
   -> Text              -- ^ The template to compile
   -> Either ParseError Template -- ^ The result
 compileMustacheText pname txt =
-  Template pname . M.singleton pname <$> parseMustache "" txt
+  Template pname . Map.singleton pname <$> parseMustache "" txt
 
 ----------------------------------------------------------------------------
 -- Helpers
