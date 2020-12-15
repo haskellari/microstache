@@ -1,6 +1,5 @@
 name:               microstache
-version:            1.0.1.1
-x-revision:         7
+version:            1.0.1.2
 cabal-version:      >=1.10
 license:            BSD3
 license-file:       LICENSE

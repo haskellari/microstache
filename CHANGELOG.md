@@ -1,3 +1,7 @@
+## microstache 1.0.1.2
+
+- Drop `bytestring` dependency (there weren't direct one)
+
 ## microstache 1.0.1.1
 
 - Fix build against `transformers-0.3`
