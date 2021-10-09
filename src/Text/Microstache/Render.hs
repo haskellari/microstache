@@ -30,7 +30,6 @@ import Data.Text                  (Text)
 import Data.Word                  (Word)
 import Text.Microstache.Type
 
-import qualified Data.HashMap.Strict     as HM
 import qualified Data.List.NonEmpty      as NE
 import qualified Data.Map                as Map
 import qualified Data.Text               as T
@@ -38,6 +37,13 @@ import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Builder  as B
 import qualified Data.Text.Lazy.Encoding as LTE
 import qualified Data.Vector             as V
+
+#if MIN_VERSION_aeson(2,0,0)
+import qualified Data.Aeson.KeyMap as KM
+import qualified Data.Aeson.Key as Key
+#else
+import qualified Data.HashMap.Strict as KM
+#endif
 
 #if MIN_VERSION_transformers(0,4,0)
 import Control.Monad.Trans.State.Strict (State, execState, modify')
@@ -235,7 +241,11 @@ simpleLookup
   -> Maybe Value       -- ^ Looked-up value
 simpleLookup _ (Key [])     obj        = return obj
 simpleLookup c (Key (k:ks)) (Object m) =
-  case HM.lookup k m of
+#if MIN_VERSION_aeson(2,0,0)
+  case KM.lookup (Key.fromText k) m of
+#else
+  case KM.lookup k m of
+#endif
     Nothing -> if c then Just Null else Nothing
     Just  v -> simpleLookup True (Key ks) v
 simpleLookup _ _ _ = Nothing
@@ -280,7 +290,7 @@ buildIndent (Just p) = let n = fromIntegral p - 1 in T.replicate n " "
 isBlank :: Value -> Bool
 isBlank Null         = True
 isBlank (Bool False) = True
-isBlank (Object   m) = HM.null m
+isBlank (Object   m) = KM.null m
 isBlank (Array    a) = V.null a
 isBlank (String   s) = T.null s
 isBlank _            = False
