@@ -1,3 +1,7 @@
+## microstache 1.0.2
+
+- Support `aeson-2.0.0.0`
+
 ## microstache 1.0.1.2
 
 - Drop `bytestring` dependency (there weren't direct one)
