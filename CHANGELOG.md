@@ -1,3 +1,7 @@
+## microstache 1.0.2.1
+
+- Support `transformers-0.6`
+
 ## microstache 1.0.2
 
 - Support `aeson-2.0.0.0`
