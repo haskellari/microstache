@@ -41,7 +41,7 @@ parseMustache
      -- ^ File contents (Mustache template)
   -> Either ParseError [Node]
      -- ^ Parsed nodes or parse error
-parseMustache = runParser (pMustache eof) (Delimiters "{{" "}}")
+parseMustache name contents = runIdentity (runParserT (pMustache eof) (Delimiters "{{" "}}") name contents)
 
 pMustache :: Parser () -> Parser [Node]
 pMustache = fmap catMaybes . manyTill (choice alts)
