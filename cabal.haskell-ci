@@ -1,7 +1,7 @@
 branches: master
 
 constraint-set transformers-0.6
-  ghc: ==7.4.* || >=8.6
+  ghc: >=8.6
   constraints: transformers ^>=0.6
   tests: True
   run-tests: True
