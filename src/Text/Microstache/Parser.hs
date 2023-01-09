@@ -11,23 +11,33 @@
 -- import the module, because "Text.Microstache" re-exports everything you may
 -- need, import that module instead.
 
+{-# LANGUAGE CPP #-}
 module Text.Microstache.Parser
   ( parseMustache )
 where
 
-import Control.Applicative   hiding (many)
-import Control.Monad
+import Control.Applicative   (Alternative (..), (<$), (<$>))
+import Control.Monad         (unless, void)
 import Data.Char             (isAlphaNum, isSpace)
-import Data.Functor.Identity
+import Data.Functor.Identity (Identity, runIdentity)
 import Data.List             (intercalate)
 import Data.Maybe            (catMaybes)
 import Data.Text.Lazy        (Text)
 import Data.Word             (Word)
-import Text.Microstache.Type
-import Text.Parsec           hiding ((<|>))
+import Text.Parsec
+       (ParseError, ParsecT, Stream, anyChar, between, char, choice, eof,
+       getPosition, getState, label, lookAhead, manyTill, notFollowedBy, oneOf,
+       putState, runParserT, satisfy, sepBy1, sourceColumn, spaces, string, try,
+       (<?>))
 import Text.Parsec.Char ()
 
+import Text.Microstache.Type
+
 import qualified Data.Text as T
+
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative (Applicative (..))
+#endif
 
 ----------------------------------------------------------------------------
 -- Parser

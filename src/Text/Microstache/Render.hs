@@ -28,7 +28,6 @@ import Data.Monoid                (mempty)
 import Data.Semigroup             ((<>))
 import Data.Text                  (Text)
 import Data.Word                  (Word)
-import Text.Microstache.Type
 
 import qualified Data.List.NonEmpty      as NE
 import qualified Data.Map                as Map
@@ -52,8 +51,10 @@ import Control.Monad.Trans.State.Strict (State, execState, get, put)
 #endif
 
 #if !MIN_VERSION_base(4,8,0)
-import Control.Applicative
+import Control.Applicative ((<$>))
 #endif
+
+import Text.Microstache.Type
 
 #if !(MIN_VERSION_transformers(0,4,0))
 modify' :: (s -> s) -> State s ()

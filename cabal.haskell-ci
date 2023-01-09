@@ -5,3 +5,8 @@ constraint-set transformers-0.6
   constraints: transformers ^>=0.6
   tests: True
   run-tests: True
+
+constraint-set parsec-3.1.16
+  constraints: parsec >=3.1.16
+  tests: True
+  run-tests: True
