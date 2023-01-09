@@ -20,13 +20,12 @@ module Text.Microstache.Compile
   , compileMustacheText )
 where
 
-import Control.Exception       (throwIO)
-import Control.Monad           (filterM, foldM)
-import Data.Text.Lazy          (Text)
+import Control.Exception (throwIO)
+import Control.Monad     (filterM, foldM)
+import Data.Text.Lazy    (Text)
 import System.Directory
-import Text.Microstache.Parser
-import Text.Microstache.Type
-import Text.Parsec
+       (doesFileExist, getCurrentDirectory, getDirectoryContents)
+import Text.Parsec       (ParseError)
 
 import qualified Data.Map          as Map
 import qualified Data.Text         as T
@@ -36,6 +35,9 @@ import qualified System.FilePath   as F
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
 #endif
+
+import Text.Microstache.Parser
+import Text.Microstache.Type
 
 -- | Compile all templates in specified directory and select one. Template
 -- files should have extension @mustache@, (e.g. @foo.mustache@) to be

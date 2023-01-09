@@ -1,3 +1,7 @@
+## microstache 1.0.2.3
+
+- Support `parsec-3.1.16.*`
+
 ## microstache 1.0.2.1
 
 - Support `transformers-0.6`

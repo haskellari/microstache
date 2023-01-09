@@ -30,17 +30,18 @@ module Text.Microstache.Type
   )
 where
 
-import Control.DeepSeq
+import Control.DeepSeq   (NFData (..))
 import Control.Exception (Exception (..))
 import Data.Data         (Data)
 import Data.Map          (Map)
-import Data.Semigroup
+import Data.Monoid       (Monoid (..))
+import Data.Semigroup    (Semigroup (..))
 import Data.String       (IsString (..))
 import Data.Text         (Text)
 import Data.Typeable     (Typeable)
 import Data.Word         (Word)
 import GHC.Generics
-import Text.Parsec
+import Text.Parsec       (ParseError)
 
 import qualified Data.Map  as Map
 import qualified Data.Text as T
