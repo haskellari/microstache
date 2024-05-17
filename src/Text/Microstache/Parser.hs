@@ -11,7 +11,6 @@
 -- import the module, because "Text.Microstache" re-exports everything you may
 -- need, import that module instead.
 
-{-# LANGUAGE CPP #-}
 module Text.Microstache.Parser
   ( parseMustache )
 where
@@ -34,10 +33,6 @@ import Text.Parsec.Char ()
 import Text.Microstache.Type
 
 import qualified Data.Text as T
-
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative (Applicative (..))
-#endif
 
 ----------------------------------------------------------------------------
 -- Parser

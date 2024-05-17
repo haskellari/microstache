@@ -11,8 +11,6 @@
 -- usually need to import the module, because "Text.Microstache" re-exports
 -- everything you may need, import that module instead.
 
-{-# LANGUAGE CPP #-}
-
 module Text.Microstache.Compile
   ( compileMustacheDir
   , getMustacheFilesInDir
@@ -31,10 +29,6 @@ import qualified Data.Map          as Map
 import qualified Data.Text         as T
 import qualified Data.Text.Lazy.IO as LT
 import qualified System.FilePath   as F
-
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>))
-#endif
 
 import Text.Microstache.Parser
 import Text.Microstache.Type

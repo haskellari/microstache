@@ -11,7 +11,6 @@
 -- because "Text.Microstache" re-exports everything you may need, import that
 -- module instead.
 
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -131,9 +130,7 @@ displayMustacheException (MustacheRenderException pname key) =
     "\", key: " ++ T.unpack (showKey key)
 
 instance Exception MustacheException where
-#if MIN_VERSION_base(4,8,0)
     displayException = displayMustacheException
-#endif
 
 -- | @since 1.0.1
 data MustacheWarning
@@ -151,6 +148,4 @@ displayMustacheWarning (MustacheDirectlyRenderedValue key) =
     "Complex value rendered as such, key: " ++ T.unpack (showKey key)
 
 instance Exception MustacheWarning where
-#if MIN_VERSION_base(4,8,0)
     displayException = displayMustacheWarning
-#endif

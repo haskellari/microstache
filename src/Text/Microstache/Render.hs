@@ -11,7 +11,6 @@
 -- import the module, because "Text.Microstache" re-exports everything you may
 -- need, import that module instead.
 
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Text.Microstache.Render
   ( renderMustache, renderMustacheW )
@@ -37,31 +36,12 @@ import qualified Data.Text.Lazy.Builder  as B
 import qualified Data.Text.Lazy.Encoding as LTE
 import qualified Data.Vector             as V
 
-#if MIN_VERSION_aeson(2,0,0)
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.Aeson.Key as Key
-#else
-import qualified Data.HashMap.Strict as KM
-#endif
 
-#if MIN_VERSION_transformers(0,4,0)
 import Control.Monad.Trans.State.Strict (State, execState, modify')
-#else
-import Control.Monad.Trans.State.Strict (State, execState, get, put)
-#endif
-
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>))
-#endif
 
 import Text.Microstache.Type
-
-#if !(MIN_VERSION_transformers(0,4,0))
-modify' :: (s -> s) -> State s ()
-modify' f = do
-    s <- get
-    put $! f s
-#endif
 
 ----------------------------------------------------------------------------
 -- The rendering monad
@@ -242,11 +222,7 @@ simpleLookup
   -> Maybe Value       -- ^ Looked-up value
 simpleLookup _ (Key [])     obj        = return obj
 simpleLookup c (Key (k:ks)) (Object m) =
-#if MIN_VERSION_aeson(2,0,0)
   case KM.lookup (Key.fromText k) m of
-#else
-  case KM.lookup k m of
-#endif
     Nothing -> if c then Just Null else Nothing
     Just  v -> simpleLookup True (Key ks) v
 simpleLookup _ _ _ = Nothing

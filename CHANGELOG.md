@@ -1,3 +1,7 @@
+## microstache 1.0.3
+
+- Support GHC-8.6.5...GHC-9.10.1
+
 ## microstache 1.0.2.3
 
 - Support `parsec-3.1.16.*`
