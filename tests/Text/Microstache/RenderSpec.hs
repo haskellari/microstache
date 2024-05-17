@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Text.Microstache.RenderSpec
@@ -14,10 +13,6 @@ import Text.Parsec
 import Text.Microstache.Render
 import Text.Microstache.Type
 import qualified Data.Map as M
-
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative (pure)
-#endif
 
 main :: IO ()
 main = hspec spec

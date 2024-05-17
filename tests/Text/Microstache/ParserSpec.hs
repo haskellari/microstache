@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Text.Microstache.ParserSpec
@@ -14,10 +13,6 @@ import Text.Microstache.Parser
 import Text.Microstache.Type
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Set           as S
-
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative (pure)
-#endif
 
 main :: IO ()
 main = hspec spec
