@@ -105,6 +105,6 @@ shouldParse (Right x) v = unless (x == v) $ expectationFailure $
 
 shouldFailParse :: (Eq a, Show a) => Either ParseError a -> Expectation
 shouldFailParse (Left _) = pure ()
-shoulwFailParse (Right x) = expectationFailure $ 
+shouldFailParse (Right x) = expectationFailure $ 
     "expected parse failure, got " ++ show x
 
